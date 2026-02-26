@@ -1162,178 +1162,275 @@
         // Generate one page for a specific week
         function generateWeekPage(doc, year, month, week, workplace, department, studentId, studentName) {
             const weekNumber = week.weekNumber;
-            
-            // Title (y=51.5pt, 22pt, center)
-            doc.setFontSize(22);
             const pageWidth = doc.internal.pageSize.getWidth();
-            doc.text('근로장학생 주간업무일지', pageWidth / 2, 51.5, { align: 'center' });
             
-            // Week info (y=88.7pt, 13pt, right-align)
-            doc.setFontSize(13);
-            doc.text(`${year}년 ${String(month).padStart(2, '0')} ( ${weekNumber} ) 주차`, pageWidth - 60, 88.7, { align: 'right' });
+            // ===== 원본 PDF 좌표 상수 (pymupdf 추출) =====
+            const COORDS = {
+                // 페이지 설정
+                page: { width: 595, height: 842 },
+                leftMargin: 59.5,
+                rightMargin: 535.2,
+                tableWidth: 475.7,
+                
+                // 제목/주차
+                title: { y: 51.5, fontSize: 22 },
+                weekInfo: { x: 389.6, y: 88.7, fontSize: 13 },
+                
+                // 기본정보 테이블
+                basicInfo: {
+                    row1Y: 105.4,
+                    row2Y: 127.0,
+                    row3Y: 148.7,
+                    textY1: 118.5,
+                    textY2: 140.4,
+                    cols: [59.5, 157.3, 278.9, 376.7, 535.2]
+                },
+                
+                // 수업시간 섹션
+                classSchedule: {
+                    headerY: 161.9,
+                    subHeaderY: 183.3,
+                    tableTop: 195.4,
+                    cols: [59.5, 154.3, 249.1, 343.9, 438.7, 535.2],
+                    rows: [195.4, 214.1, 232.8, 251.5, 270.2, 288.9],
+                    dayHeaderY: 203.4,
+                    dayX: [90.1, 185.8, 281.3, 376.1, 471.1]
+                },
+                
+                // 근로시간/내용 섹션
+                workSection: {
+                    headerY: 299.5,
+                    tableTop: 312.3,
+                    headerRowBottom: 336.0,
+                    cols: [59.5, 125.5, 230.8, 460.0, 535.2],
+                    // 요일별 Y좌표 (2줄씩)
+                    dayRows: [
+                        { top: 336.0, dateY: 352.5, dayY: 370.2, timeY1: 341.8, timeY2: 359.4 },
+                        { top: 389.0, dateY: 405.6, dayY: 423.1, timeY1: 394.8, timeY2: 412.4 },
+                        { top: 442.0, dateY: 458.5, dayY: 476.1, timeY1: 447.7, timeY2: 465.3 },
+                        { top: 495.0, dateY: 511.4, dayY: 529.1, timeY1: 500.6, timeY2: 518.4 },
+                        { top: 548.0, dateY: 564.3, dayY: 582.0, timeY1: 553.7, timeY2: 571.3 }
+                    ],
+                    dayRowHeight: 53.0,
+                    subRowHeight: 26.5,
+                    tableBottom: 601.0
+                },
+                
+                // 담당자 수정내역 섹션
+                corrections: {
+                    headerY: 617.9,
+                    subHeaderY: 635.5,
+                    labelX: 181.8,
+                    rowYs: [607.8, 624.1, 640.4, 656.6, 672.9, 689.2]
+                },
+                
+                // 서명 섹션
+                signatures: {
+                    totalY: 708.5,
+                    studentY: 743.3,
+                    supervisorY: 775.7
+                }
+            };
             
-            // Basic Info Table (y=115-159pt, 4 columns × 2 rows)
+            // ===== 제목 (중앙 정렬) =====
+            doc.setFontSize(COORDS.title.fontSize);
+            doc.text('근로장학생 주간업무일지', pageWidth / 2, COORDS.title.y, { align: 'center' });
+            
+            // ===== 주차 정보 (우측 정렬, 원본 spacing 유지) =====
+            doc.setFontSize(COORDS.weekInfo.fontSize);
+            const weekStr = `${year} 년   ${String(month).padStart(2, '0')} ( ${weekNumber} ) 주차`;
+            doc.text(weekStr, pageWidth - 60, COORDS.weekInfo.y, { align: 'right' });
+            
+            // ===== 기본 정보 테이블 =====
             doc.setFontSize(11);
-            const basicY = 115;
-            const colWidth = 118.8; // 476pt total width / 4 cols = 119pt per col
-            const rowHeight = 22;
+            const bi = COORDS.basicInfo;
             
-            // Draw basic info table borders
-            doc.rect(59.5, basicY, colWidth, rowHeight);
-            doc.rect(59.5 + colWidth, basicY, colWidth, rowHeight);
-            doc.rect(59.5 + colWidth * 2, basicY, colWidth, rowHeight);
-            doc.rect(59.5 + colWidth * 2 + colWidth, basicY, colWidth, rowHeight);
+            // 테이블 외곽선 및 구분선
+            doc.rect(COORDS.leftMargin, bi.row1Y, COORDS.tableWidth, bi.row3Y - bi.row1Y);
+            doc.line(COORDS.leftMargin, bi.row2Y, COORDS.rightMargin, bi.row2Y);
+            doc.line(bi.cols[1], bi.row1Y, bi.cols[1], bi.row3Y);
+            doc.line(bi.cols[2], bi.row1Y, bi.cols[2], bi.row3Y);
+            doc.line(bi.cols[3], bi.row1Y, bi.cols[3], bi.row3Y);
             
-            doc.rect(59.5, basicY + rowHeight, colWidth, rowHeight);
-            doc.rect(59.5 + colWidth, basicY + rowHeight, colWidth, rowHeight);
-            doc.rect(59.5 + colWidth * 2, basicY + rowHeight, colWidth, rowHeight);
-            doc.rect(59.5 + colWidth * 2 + colWidth, basicY + rowHeight, colWidth, rowHeight);
+            // 텍스트 (행 1)
+            doc.text('근로장소', 68.9, bi.textY1);
+            doc.text(workplace || '', 169.2, bi.textY1);
+            doc.text('학  과', 293.8, bi.textY1);
+            doc.text(department || '', 346.8, bi.textY1);
             
-            // Fill basic info (center text vertically in 22pt row)
-            const textY = basicY + 14;
-            doc.text('근로장소', 65, textY);
-            doc.text(workplace, 65 + colWidth, textY);
-            doc.text('학  과', 65 + colWidth * 2, textY);
-            doc.text(department, 65 + colWidth * 2 + colWidth, textY);
+            // 텍스트 (행 2)
+            doc.text('학  번', 74.4, bi.textY2);
+            doc.text(studentId || '', 173.4, bi.textY2);
+            doc.text('성  명', 293.8, bi.textY2);
+            doc.text(studentName || '', 346.8, bi.textY2);
             
-            doc.text('학  번', 65, textY + rowHeight);
-            doc.text(studentId, 65 + colWidth, textY + rowHeight);
-            doc.text('성  명', 65 + colWidth * 2, textY + rowHeight);
-            doc.text(studentName, 65 + colWidth * 2 + colWidth, textY + rowHeight);
+            // ===== 수업시간 섹션 =====
+            const cs = COORDS.classSchedule;
             
-            // Class Schedule Section (y=180-295pt, blank table)
+            // 헤더 텍스트
             doc.setFontSize(12);
-            doc.text('근로장학생 수업시간', 59.5, 175);
-            
+            doc.text('근로장학생 수업시간', pageWidth / 2, cs.headerY, { align: 'center' });
             doc.setFontSize(10);
-            const classY = 180;
-            const classColWidth = 95; // 476pt / 5 cols = 95.2pt
-            const classRowHeight = 28.75; // 115pt / 4 rows = 28.75pt
+            doc.text('근로장학 주간 요일별 교과목 수업시간', pageWidth / 2, cs.subHeaderY, { align: 'center' });
             
-            // Draw 5 cols × 4 rows blank table
+            // 5열 × 5행 테이블 (헤더행 + 4교시행)
+            for (let i = 0; i < 6; i++) {
+                doc.line(COORDS.leftMargin, cs.rows[i], COORDS.rightMargin, cs.rows[i]);
+            }
+            for (let i = 0; i < 6; i++) {
+                doc.line(cs.cols[i], cs.rows[0], cs.cols[i], cs.rows[5]);
+            }
+            
+            // 요일 헤더
+            doc.setFontSize(10);
+            const dayHeaders = ['월요일', '화요일', '수요일', '목요일', '금요일'];
+            for (let i = 0; i < 5; i++) {
+                doc.text(dayHeaders[i], cs.dayX[i], cs.dayHeaderY);
+            }
+            
+            // 교시 입력란 (빈 상태로 ~    교시 형식)
+            const classRowYs = [222.0, 240.7, 259.3, 278.0];
+            const classColXs = [64.6, 159.0, 255.7, 350.0, 445.2];
             for (let row = 0; row < 4; row++) {
                 for (let col = 0; col < 5; col++) {
-                    doc.rect(59.5 + col * classColWidth, classY + row * classRowHeight, classColWidth, classRowHeight);
+                    doc.text('~    교시', classColXs[col], classRowYs[row]);
                 }
             }
             
-            // Work Time/Content Section (y=319-607pt)
+            // ===== 근로시간/내용 섹션 =====
+            const ws = COORDS.workSection;
+            
+            // 섹션 헤더
             doc.setFontSize(11);
-            const workY = 319;
-            const workColX = [59.5, 125.5, 230.8, 460.0, 535.2]; // From plan spec
-            const workRowHeight = 57.6; // 288pt / 5 days = 57.6pt per day (2 rows each = 28.8pt per row)
-            const workRowHeightHalf = 28.8;
+            doc.text('근로 장학 시간 및 근로 장학 내용', pageWidth / 2, ws.headerY, { align: 'center' });
             
-            // Draw header row
-            doc.rect(workColX[0], workY, workColX[1] - workColX[0], workRowHeightHalf);
-            doc.text('근무일', workColX[0] + 20, workY + 18);
+            // 테이블 외곽선
+            doc.rect(COORDS.leftMargin, ws.tableTop, COORDS.tableWidth, ws.tableBottom - ws.tableTop);
             
-            doc.rect(workColX[1], workY, workColX[2] - workColX[1], workRowHeightHalf);
-            doc.text('근로시간', workColX[1] + 30, workY + 18);
+            // 헤더 행 구분선
+            doc.line(COORDS.leftMargin, ws.headerRowBottom, COORDS.rightMargin, ws.headerRowBottom);
             
-            doc.rect(workColX[2], workY, workColX[3] - workColX[2], workRowHeightHalf);
-            doc.text('근로내용', workColX[2] + 90, workY + 18);
+            // 열 구분선
+            for (let i = 1; i < ws.cols.length - 1; i++) {
+                doc.line(ws.cols[i], ws.tableTop, ws.cols[i], ws.tableBottom);
+            }
             
-            doc.rect(workColX[3], workY, workColX[4] - workColX[3], workRowHeightHalf);
-            doc.text('일근로시간', workColX[3] + 15, workY + 18);
+            // 헤더 텍스트
+            doc.text('근무일', 76.0, 323.3);
+            doc.text('근로시간', 156.1, 323.3);
+            doc.text('근로내용', 323.3, 323.3);
+            doc.text('일근로시간', 470.0, 323.3);
             
-            // Create weekday map from work data
+            // 요일별 가로 구분선 및 근로시간 열 내부 구분선
+            for (let i = 0; i < 5; i++) {
+                const dayRow = ws.dayRows[i];
+                if (i < 4) {
+                    // 요일 간 구분선
+                    doc.line(COORDS.leftMargin, dayRow.top + ws.dayRowHeight, COORDS.rightMargin, dayRow.top + ws.dayRowHeight);
+                }
+                // 근로시간 열 내부 2줄 구분선
+                doc.line(ws.cols[1], dayRow.top + ws.subRowHeight, ws.cols[2], dayRow.top + ws.subRowHeight);
+            }
+            
+            // 근무일 데이터 매핑
             const workDayMap = {};
             week.days.forEach(day => {
-                const dayOfWeek = day.date.getDay(); // 0=Sun, 1=Mon, ..., 5=Fri
-                if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Mon-Fri only
+                const dayOfWeek = day.date.getDay();
+                if (dayOfWeek >= 1 && dayOfWeek <= 5) {
                     workDayMap[dayOfWeek] = day;
                 }
             });
             
-            // Fill work data (Mon-Fri, 5 days × 2 rows each)
-            doc.setFontSize(10);
+            // 각 요일 데이터 렌더링
             const dayNames = ['', '월', '화', '수', '목', '금'];
-            let currentY = workY + workRowHeightHalf;
+            doc.setFontSize(10);
             
             for (let dayOfWeek = 1; dayOfWeek <= 5; dayOfWeek++) {
+                const dayRow = ws.dayRows[dayOfWeek - 1];
                 const workDay = workDayMap[dayOfWeek];
                 
+                // 날짜 계산
+                let targetDate;
                 if (workDay) {
-                    // Has work data
-                    const date = workDay.date;
-                    const data = workDay.data;
-                    const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
-                    const timeStr = data.startTime && data.endTime ? `${data.startTime}~${data.endTime}` : '-';
-                    const hoursStr = data.hours > 0 ? `${data.hours.toFixed(1)}` : '-';
-                    const content = data.workContent || '-';
-                    
-                    // Day name + date (merged 2 rows)
-                    doc.rect(workColX[0], currentY, workColX[1] - workColX[0], workRowHeight);
-                    doc.text(`${dayNames[dayOfWeek]}(${dateStr})`, workColX[0] + 8, currentY + 32);
-                    
-                    // Work time (first row only)
-                    doc.rect(workColX[1], currentY, workColX[2] - workColX[1], workRowHeightHalf);
-                    doc.text(timeStr, workColX[1] + 8, currentY + 18);
-                    
-                    // Work content (merged 2 rows)
-                    doc.rect(workColX[2], currentY, workColX[3] - workColX[2], workRowHeight);
-                    const lines = doc.splitTextToSize(content, workColX[3] - workColX[2] - 16);
-                    doc.text(lines.slice(0, 4), workColX[2] + 8, currentY + 18);
-                    
-                    // Daily hours (merged 2 rows)
-                    doc.rect(workColX[3], currentY, workColX[4] - workColX[3], workRowHeight);
-                    doc.text(hoursStr, workColX[3] + 22, currentY + 32);
-                    
-                    // Second row (empty time cell)
-                    doc.rect(workColX[1], currentY + workRowHeightHalf, workColX[2] - workColX[1], workRowHeightHalf);
+                    targetDate = workDay.date;
                 } else {
-                    // No work data - show "-"
-                    const firstDay = week.days[0].date;
+                    const firstDay = week.days[0]?.date || new Date(year, month - 1, 1);
                     const weekStart = new Date(firstDay);
-                    weekStart.setDate(firstDay.getDate() - (firstDay.getDay() - 1));
-                    const targetDate = new Date(weekStart);
+                    const dayDiff = firstDay.getDay() - 1;
+                    weekStart.setDate(firstDay.getDate() - dayDiff);
+                    targetDate = new Date(weekStart);
                     targetDate.setDate(weekStart.getDate() + (dayOfWeek - 1));
-                    const dateStr = `${targetDate.getMonth() + 1}/${targetDate.getDate()}`;
-                    
-                    // Day name + date (merged 2 rows)
-                    doc.rect(workColX[0], currentY, workColX[1] - workColX[0], workRowHeight);
-                    doc.text(`${dayNames[dayOfWeek]}(${dateStr})`, workColX[0] + 8, currentY + 32);
-                    
-                    // Work time (first row)
-                    doc.rect(workColX[1], currentY, workColX[2] - workColX[1], workRowHeightHalf);
-                    doc.text('-', workColX[1] + 45, currentY + 18);
-                    
-                    // Work content (merged 2 rows)
-                    doc.rect(workColX[2], currentY, workColX[3] - workColX[2], workRowHeight);
-                    doc.text('-', workColX[2] + 110, currentY + 32);
-                    
-                    // Daily hours (merged 2 rows)
-                    doc.rect(workColX[3], currentY, workColX[4] - workColX[3], workRowHeight);
-                    doc.text('-', workColX[3] + 30, currentY + 32);
-                    
-                    // Second row (empty time cell)
-                    doc.rect(workColX[1], currentY + workRowHeightHalf, workColX[2] - workColX[1], workRowHeightHalf);
                 }
                 
-                currentY += workRowHeight;
+                const monthNum = targetDate.getMonth() + 1;
+                const dayNum = targetDate.getDate();
+                
+                // 날짜 2줄 표시: "10월 11일" + "(수)"
+                doc.text(`${monthNum}월 ${dayNum}일`, 66.7, dayRow.dateY);
+                doc.text(`(${dayNames[dayOfWeek]})`, 83.6, dayRow.dayY);
+                
+                if (workDay && workDay.data) {
+                    const data = workDay.data;
+                    
+                    // 시간 형식: "HH:MM ~ HH:MM"
+                    if (data.startTime && data.endTime) {
+                        doc.text(`${data.startTime} ~ ${data.endTime}`, 142.3, dayRow.timeY1);
+                    }
+                    doc.text('~', 174.4, dayRow.timeY2);
+                    
+                    // 근로내용
+                    if (data.workContent) {
+                        const contentLines = doc.splitTextToSize(data.workContent, ws.cols[3] - ws.cols[2] - 16);
+                        doc.text(contentLines.slice(0, 2), 235.9, dayRow.timeY1);
+                    }
+                    
+                    // 일근로시간: "N시간" 형식
+                    if (data.hours > 0) {
+                        doc.text(`${Math.floor(data.hours)}시간`, 465.0, dayRow.timeY1);
+                    }
+                } else {
+                    // 빈 데이터
+                    doc.text('~', 174.4, dayRow.timeY1);
+                    doc.text('~', 174.4, dayRow.timeY2);
+                }
             }
             
-            // Supervisor Corrections Section (y=607-689pt, blank)
-            doc.setFontSize(11);
-            doc.text('근로학생 담당자 수정사항', 59.5, 602);
+            // ===== 담당자 수정내역 섹션 =====
+            const cr = COORDS.corrections;
             
-            const correctionY = 607;
-            doc.rect(59.5, correctionY, 475.7, 82);
+            // 섹션 구분선
+            doc.line(COORDS.leftMargin, cr.rowYs[0], COORDS.rightMargin, cr.rowYs[0]);
             
-            // Signature Section (y=708-790pt)
-            doc.setFontSize(11);
-            const signatureY = 708;
+            // 헤더
+            doc.setFontSize(10);
+            doc.text('담당자', 76.0, cr.headerY);
+            doc.text('수정내역', 70.6, cr.subHeaderY);
             
-            // Calculate weekly total hours
+            // 5줄 "월    일" 입력란
+            for (let i = 0; i < 5; i++) {
+                doc.text('월    일', cr.labelX, cr.rowYs[i]);
+                if (i < 4) {
+                    doc.line(COORDS.leftMargin, cr.rowYs[i + 1], COORDS.rightMargin, cr.rowYs[i + 1]);
+                }
+            }
+            doc.line(COORDS.leftMargin, cr.rowYs[5], COORDS.rightMargin, cr.rowYs[5]);
+            
+            // 세로 구분선 (담당자 열)
+            doc.line(125.5, cr.rowYs[0], 125.5, cr.rowYs[5]);
+            
+            // ===== 서명 섹션 =====
+            const sig = COORDS.signatures;
+            
+            // 주간 근로시간 계산
             let weeklyTotalHours = 0;
             week.days.forEach(day => {
-                weeklyTotalHours += day.data.hours || 0;
+                weeklyTotalHours += day.data?.hours || 0;
             });
             
-            doc.text(`주간 근로시간 : ${weeklyTotalHours.toFixed(1)}시간`, pageWidth - 60, signatureY + 15, { align: 'right' });
-            doc.text('근로장학생 :               (서명)', pageWidth - 60, signatureY + 35, { align: 'right' });
-            doc.text('근로학생 담당자 :               (서명)', pageWidth - 60, signatureY + 55, { align: 'right' });
+            doc.setFontSize(11);
+            doc.text(`주간 근로시간 :       ${Math.floor(weeklyTotalHours)}시간`, pageWidth - 60, sig.totalY, { align: 'right' });
+            doc.text('근로장학생 :               (서명)', pageWidth - 60, sig.studentY, { align: 'right' });
+            doc.text('근로학생 담당자 :               (서명)', pageWidth - 60, sig.supervisorY, { align: 'right' });
         }
     </script>
 </body>
