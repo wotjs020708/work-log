@@ -1081,9 +1081,29 @@
         // Generate PDF
         function generatePDF() {
             const { jsPDF } = window.jspdf;
+            
+            // Get year and month from selectors
+            const year = parseInt(document.getElementById('year').value);
+            const month = parseInt(document.getElementById('month').value);
+            
+            // Get settings
+            const workplace = document.getElementById('workplace').value || '-';
+            const department = document.getElementById('department').value || '-';
+            const studentId = document.getElementById('studentId').value || '-';
+            const studentName = document.getElementById('studentName').value || '-';
+            
+            // Split month into weeks
+            const weeks = splitMonthIntoWeeks(year, month);
+            
+            if (weeks.length === 0) {
+                alert('이번 달에 근무 데이터가 없습니다.');
+                return;
+            }
+            
+            // Create PDF document with optimization flags
             const doc = new jsPDF({
                 orientation: 'portrait',
-                unit: 'mm',
+                unit: 'pt',
                 format: 'a4',
                 putOnlyUsedFonts: true,
                 compress: true
@@ -1092,177 +1112,228 @@
             // Register NanumGothic font
             doc.addFileToVFS("NanumGothic-Regular.ttf", nanumGothicBase64);
             doc.addFont("NanumGothic-Regular.ttf", "NanumGothic", "normal", "Identity-H");
-            
-            // Get data
-            const workplace = document.getElementById('workplace').value || '-';
-            const department = document.getElementById('department').value || '-';
-            const studentId = document.getElementById('studentId').value || '-';
-            const studentName = document.getElementById('studentName').value || '-';
-            
-            const mondayDate = new Date(document.getElementById('mondayDate').value);
-            const year = mondayDate.getFullYear();
-            const month = mondayDate.getMonth() + 1;
-            const weekNumber = getISOWeekNumber(mondayDate);
-            
-            // Set font (fallback to default for Korean support)
             doc.setFont('NanumGothic');
             
-            // Title (y=25mm, 22pt, center)
-            doc.setFontSize(22);
-            doc.text('근로장학생 주간업무일지', 105, 25, { align: 'center' });
-            
-            // Date and week number (y=35mm, 13pt, right-align)
-            doc.setFontSize(13);
-            doc.text(`${year}년 ${String(month).padStart(2, '0')} ( ${weekNumber} ) 주차`, 200, 35, { align: 'right' });
-            
-            // Basic Info Table (y=45mm)
-            doc.setFontSize(11);
-            const tableY = 45;
-            const colWidth = 47.5;
-            const rowHeight = 10;
-            
-            // Draw table borders
-            doc.rect(10, tableY, colWidth, rowHeight); // 근로장소 label
-            doc.rect(10 + colWidth, tableY, colWidth, rowHeight); // 근로장소 value
-            doc.rect(10 + colWidth * 2, tableY, colWidth, rowHeight); // 학과 label
-            doc.rect(10 + colWidth * 2 + colWidth, tableY, colWidth, rowHeight); // 학과 value
-            
-            doc.rect(10, tableY + rowHeight, colWidth, rowHeight); // 학번 label
-            doc.rect(10 + colWidth, tableY + rowHeight, colWidth, rowHeight); // 학번 value
-            doc.rect(10 + colWidth * 2, tableY + rowHeight, colWidth, rowHeight); // 성명 label
-            doc.rect(10 + colWidth * 2 + colWidth, tableY + rowHeight, colWidth, rowHeight); // 성명 value
-            
-            // Fill basic info
-            doc.text('근로장소', 15, tableY + 6);
-            doc.text(workplace, 15 + colWidth, tableY + 6);
-            doc.text('학  과', 15 + colWidth * 2, tableY + 6);
-            doc.text(department, 15 + colWidth * 2 + colWidth, tableY + 6);
-            
-            doc.text('학  번', 15, tableY + rowHeight + 6);
-            doc.text(studentId, 15 + colWidth, tableY + rowHeight + 6);
-            doc.text('성  명', 15 + colWidth * 2, tableY + rowHeight + 6);
-            doc.text(studentName, 15 + colWidth * 2 + colWidth, tableY + rowHeight + 6);
-            
-            // Class Schedule Section (y=65mm) - Blank table
-            const classY = 70;
-            doc.setFontSize(12);
-            doc.text('근로장학생 수업시간', 10, classY);
-            
-            doc.setFontSize(10);
-            const classTableY = classY + 5;
-            const classColWidth = 38;
-            const classRowHeight = 8;
-            
-            // Draw class schedule table (5 cols × 4 rows, blank)
-            for (let row = 0; row < 4; row++) {
-                for (let col = 0; col < 5; col++) {
-                    doc.rect(10 + col * classColWidth, classTableY + row * classRowHeight, classColWidth, classRowHeight);
+            // Generate one page per week
+            weeks.forEach((week, index) => {
+                if (index > 0) {
+                    doc.addPage();
                 }
-            }
-            
-            // Work Time/Content Section (y=115mm)
-            const workY = 115;
-            doc.setFontSize(11);
-            
-            // Table headers
-            const workColWidths = [30, 40, 80, 30];
-            const workRowHeight = 12;
-            let currentX = 10;
-            
-            // Draw header row
-            doc.rect(currentX, workY, workColWidths[0], workRowHeight);
-            doc.text('근무일', currentX + 12, workY + 8);
-            currentX += workColWidths[0];
-            
-            doc.rect(currentX, workY, workColWidths[1], workRowHeight);
-            doc.text('근로시간', currentX + 14, workY + 8);
-            currentX += workColWidths[1];
-            
-            doc.rect(currentX, workY, workColWidths[2], workRowHeight);
-            doc.text('근로내용', currentX + 35, workY + 8);
-            currentX += workColWidths[2];
-            
-            doc.rect(currentX, workY, workColWidths[3], workRowHeight);
-            doc.text('일근로시간', currentX + 8, workY + 8);
-            
-            // Fill work data (2 rows per day × 5 days)
-            const days = ['월', '화', '수', '목', '금'];
-            let currentY = workY + workRowHeight;
-            
-            doc.setFontSize(10);
-            
-            for (let i = 0; i < 5; i++) {
-                const date = new Date(mondayDate);
-                date.setDate(mondayDate.getDate() + i);
-                const dateStr = `${month}/${date.getDate()}`;
-                
-                const startTime = document.getElementById(`start${i}`)?.value || '';
-                const endTime = document.getElementById(`end${i}`)?.value || '';
-                const workContent = document.getElementById(`work${i}`)?.value || '';
-                const dailyHours = calculateDailyHours(startTime, endTime);
-                
-                const timeStr = (startTime && endTime && dailyHours >= 0) 
-                    ? `${startTime}~${endTime}` 
-                    : '-';
-                const hoursStr = (dailyHours > 0) ? `${dailyHours.toFixed(1)}` : '-';
-                
-                // First row for this day
-                currentX = 10;
-                
-                // Day name + date (merged 2 rows)
-                doc.rect(currentX, currentY, workColWidths[0], workRowHeight * 2);
-                doc.text(`${days[i]}(${dateStr})`, currentX + 3, currentY + 12);
-                currentX += workColWidths[0];
-                
-                // Work time
-                doc.rect(currentX, currentY, workColWidths[1], workRowHeight);
-                doc.text(timeStr, currentX + 3, currentY + 8);
-                currentX += workColWidths[1];
-                
-                // Work content (merged 2 rows)
-                doc.rect(currentX, currentY, workColWidths[2], workRowHeight * 2);
-                
-                // Split long text
-                if (workContent) {
-                    const lines = doc.splitTextToSize(workContent, workColWidths[2] - 6);
-                    doc.text(lines.slice(0, 3), currentX + 3, currentY + 6);
-                }
-                currentX += workColWidths[2];
-                
-                // Daily hours (merged 2 rows)
-                doc.rect(currentX, currentY, workColWidths[3], workRowHeight * 2);
-                doc.text(hoursStr, currentX + 10, currentY + 12);
-                
-                // Second row for this day
-                currentY += workRowHeight;
-                currentX = 10 + workColWidths[0];
-                
-                // Empty time cell
-                doc.rect(currentX, currentY, workColWidths[1], workRowHeight);
-                
-                currentY += workRowHeight;
-            }
-            
-            // Supervisor Corrections Table (y=235mm)
-            const correctionY = 235;
-            doc.setFontSize(11);
-            doc.text('근로학생 담당자 수정사항', 10, correctionY);
-            
-            const correctionTableY = correctionY + 5;
-            doc.rect(10, correctionTableY, 190, 20);
-            
-            // Signature Section (y=265mm)
-            const signatureY = 265;
-            const totalHours = calculateWeeklyHours();
-            
-            doc.setFontSize(11);
-            doc.text(`주간 근로시간 : ${totalHours.toFixed(1)}시간`, 150, signatureY, { align: 'right' });
-            doc.text('근로장학생 :               (서명)', 150, signatureY + 8, { align: 'right' });
-            doc.text('근로학생 담당자 :               (서명)', 150, signatureY + 16, { align: 'right' });
+                generateWeekPage(doc, year, month, week, workplace, department, studentId, studentName);
+            });
             
             // Save PDF
-            const filename = `work-log-${year}-${String(month).padStart(2, '0')}-${String(mondayDate.getDate()).padStart(2, '0')}.pdf`;
+            const filename = `work-log-${year}-${String(month).padStart(2, '0')}.pdf`;
             doc.save(filename);
+        }
+        
+        // Split month into weeks (ISO 8601 week-based grouping)
+        function splitMonthIntoWeeks(year, month) {
+            const weeks = {};
+            
+            // Iterate through all dates in monthlyWorkData
+            for (const dateKey in monthlyWorkData) {
+                const [y, m, d] = dateKey.split('-').map(Number);
+                if (y === year && m === month) {
+                    const date = new Date(y, m - 1, d);
+                    const weekNum = getISOWeekNumber(date);
+                    
+                    if (!weeks[weekNum]) {
+                        weeks[weekNum] = [];
+                    }
+                    
+                    weeks[weekNum].push({
+                        date: date,
+                        dateKey: dateKey,
+                        data: monthlyWorkData[dateKey]
+                    });
+                }
+            }
+            
+            // Convert to array and sort by week number
+            const weekArray = Object.keys(weeks).map(weekNum => ({
+                weekNumber: parseInt(weekNum),
+                days: weeks[weekNum].sort((a, b) => a.date - b.date)
+            })).sort((a, b) => a.weekNumber - b.weekNumber);
+            
+            return weekArray;
+        }
+        
+        // Generate one page for a specific week
+        function generateWeekPage(doc, year, month, week, workplace, department, studentId, studentName) {
+            const weekNumber = week.weekNumber;
+            
+            // Title (y=51.5pt, 22pt, center)
+            doc.setFontSize(22);
+            const pageWidth = doc.internal.pageSize.getWidth();
+            doc.text('근로장학생 주간업무일지', pageWidth / 2, 51.5, { align: 'center' });
+            
+            // Week info (y=88.7pt, 13pt, right-align)
+            doc.setFontSize(13);
+            doc.text(`${year}년 ${String(month).padStart(2, '0')} ( ${weekNumber} ) 주차`, pageWidth - 60, 88.7, { align: 'right' });
+            
+            // Basic Info Table (y=115-159pt, 4 columns × 2 rows)
+            doc.setFontSize(11);
+            const basicY = 115;
+            const colWidth = 118.8; // 476pt total width / 4 cols = 119pt per col
+            const rowHeight = 22;
+            
+            // Draw basic info table borders
+            doc.rect(59.5, basicY, colWidth, rowHeight);
+            doc.rect(59.5 + colWidth, basicY, colWidth, rowHeight);
+            doc.rect(59.5 + colWidth * 2, basicY, colWidth, rowHeight);
+            doc.rect(59.5 + colWidth * 2 + colWidth, basicY, colWidth, rowHeight);
+            
+            doc.rect(59.5, basicY + rowHeight, colWidth, rowHeight);
+            doc.rect(59.5 + colWidth, basicY + rowHeight, colWidth, rowHeight);
+            doc.rect(59.5 + colWidth * 2, basicY + rowHeight, colWidth, rowHeight);
+            doc.rect(59.5 + colWidth * 2 + colWidth, basicY + rowHeight, colWidth, rowHeight);
+            
+            // Fill basic info (center text vertically in 22pt row)
+            const textY = basicY + 14;
+            doc.text('근로장소', 65, textY);
+            doc.text(workplace, 65 + colWidth, textY);
+            doc.text('학  과', 65 + colWidth * 2, textY);
+            doc.text(department, 65 + colWidth * 2 + colWidth, textY);
+            
+            doc.text('학  번', 65, textY + rowHeight);
+            doc.text(studentId, 65 + colWidth, textY + rowHeight);
+            doc.text('성  명', 65 + colWidth * 2, textY + rowHeight);
+            doc.text(studentName, 65 + colWidth * 2 + colWidth, textY + rowHeight);
+            
+            // Class Schedule Section (y=180-295pt, blank table)
+            doc.setFontSize(12);
+            doc.text('근로장학생 수업시간', 59.5, 175);
+            
+            doc.setFontSize(10);
+            const classY = 180;
+            const classColWidth = 95; // 476pt / 5 cols = 95.2pt
+            const classRowHeight = 28.75; // 115pt / 4 rows = 28.75pt
+            
+            // Draw 5 cols × 4 rows blank table
+            for (let row = 0; row < 4; row++) {
+                for (let col = 0; col < 5; col++) {
+                    doc.rect(59.5 + col * classColWidth, classY + row * classRowHeight, classColWidth, classRowHeight);
+                }
+            }
+            
+            // Work Time/Content Section (y=319-607pt)
+            doc.setFontSize(11);
+            const workY = 319;
+            const workColX = [59.5, 125.5, 230.8, 460.0, 535.2]; // From plan spec
+            const workRowHeight = 57.6; // 288pt / 5 days = 57.6pt per day (2 rows each = 28.8pt per row)
+            const workRowHeightHalf = 28.8;
+            
+            // Draw header row
+            doc.rect(workColX[0], workY, workColX[1] - workColX[0], workRowHeightHalf);
+            doc.text('근무일', workColX[0] + 20, workY + 18);
+            
+            doc.rect(workColX[1], workY, workColX[2] - workColX[1], workRowHeightHalf);
+            doc.text('근로시간', workColX[1] + 30, workY + 18);
+            
+            doc.rect(workColX[2], workY, workColX[3] - workColX[2], workRowHeightHalf);
+            doc.text('근로내용', workColX[2] + 90, workY + 18);
+            
+            doc.rect(workColX[3], workY, workColX[4] - workColX[3], workRowHeightHalf);
+            doc.text('일근로시간', workColX[3] + 15, workY + 18);
+            
+            // Create weekday map from work data
+            const workDayMap = {};
+            week.days.forEach(day => {
+                const dayOfWeek = day.date.getDay(); // 0=Sun, 1=Mon, ..., 5=Fri
+                if (dayOfWeek >= 1 && dayOfWeek <= 5) { // Mon-Fri only
+                    workDayMap[dayOfWeek] = day;
+                }
+            });
+            
+            // Fill work data (Mon-Fri, 5 days × 2 rows each)
+            doc.setFontSize(10);
+            const dayNames = ['', '월', '화', '수', '목', '금'];
+            let currentY = workY + workRowHeightHalf;
+            
+            for (let dayOfWeek = 1; dayOfWeek <= 5; dayOfWeek++) {
+                const workDay = workDayMap[dayOfWeek];
+                
+                if (workDay) {
+                    // Has work data
+                    const date = workDay.date;
+                    const data = workDay.data;
+                    const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
+                    const timeStr = data.startTime && data.endTime ? `${data.startTime}~${data.endTime}` : '-';
+                    const hoursStr = data.hours > 0 ? `${data.hours.toFixed(1)}` : '-';
+                    const content = data.workContent || '-';
+                    
+                    // Day name + date (merged 2 rows)
+                    doc.rect(workColX[0], currentY, workColX[1] - workColX[0], workRowHeight);
+                    doc.text(`${dayNames[dayOfWeek]}(${dateStr})`, workColX[0] + 8, currentY + 32);
+                    
+                    // Work time (first row only)
+                    doc.rect(workColX[1], currentY, workColX[2] - workColX[1], workRowHeightHalf);
+                    doc.text(timeStr, workColX[1] + 8, currentY + 18);
+                    
+                    // Work content (merged 2 rows)
+                    doc.rect(workColX[2], currentY, workColX[3] - workColX[2], workRowHeight);
+                    const lines = doc.splitTextToSize(content, workColX[3] - workColX[2] - 16);
+                    doc.text(lines.slice(0, 4), workColX[2] + 8, currentY + 18);
+                    
+                    // Daily hours (merged 2 rows)
+                    doc.rect(workColX[3], currentY, workColX[4] - workColX[3], workRowHeight);
+                    doc.text(hoursStr, workColX[3] + 22, currentY + 32);
+                    
+                    // Second row (empty time cell)
+                    doc.rect(workColX[1], currentY + workRowHeightHalf, workColX[2] - workColX[1], workRowHeightHalf);
+                } else {
+                    // No work data - show "-"
+                    const firstDay = week.days[0].date;
+                    const weekStart = new Date(firstDay);
+                    weekStart.setDate(firstDay.getDate() - (firstDay.getDay() - 1));
+                    const targetDate = new Date(weekStart);
+                    targetDate.setDate(weekStart.getDate() + (dayOfWeek - 1));
+                    const dateStr = `${targetDate.getMonth() + 1}/${targetDate.getDate()}`;
+                    
+                    // Day name + date (merged 2 rows)
+                    doc.rect(workColX[0], currentY, workColX[1] - workColX[0], workRowHeight);
+                    doc.text(`${dayNames[dayOfWeek]}(${dateStr})`, workColX[0] + 8, currentY + 32);
+                    
+                    // Work time (first row)
+                    doc.rect(workColX[1], currentY, workColX[2] - workColX[1], workRowHeightHalf);
+                    doc.text('-', workColX[1] + 45, currentY + 18);
+                    
+                    // Work content (merged 2 rows)
+                    doc.rect(workColX[2], currentY, workColX[3] - workColX[2], workRowHeight);
+                    doc.text('-', workColX[2] + 110, currentY + 32);
+                    
+                    // Daily hours (merged 2 rows)
+                    doc.rect(workColX[3], currentY, workColX[4] - workColX[3], workRowHeight);
+                    doc.text('-', workColX[3] + 30, currentY + 32);
+                    
+                    // Second row (empty time cell)
+                    doc.rect(workColX[1], currentY + workRowHeightHalf, workColX[2] - workColX[1], workRowHeightHalf);
+                }
+                
+                currentY += workRowHeight;
+            }
+            
+            // Supervisor Corrections Section (y=607-689pt, blank)
+            doc.setFontSize(11);
+            doc.text('근로학생 담당자 수정사항', 59.5, 602);
+            
+            const correctionY = 607;
+            doc.rect(59.5, correctionY, 475.7, 82);
+            
+            // Signature Section (y=708-790pt)
+            doc.setFontSize(11);
+            const signatureY = 708;
+            
+            // Calculate weekly total hours
+            let weeklyTotalHours = 0;
+            week.days.forEach(day => {
+                weeklyTotalHours += day.data.hours || 0;
+            });
+            
+            doc.text(`주간 근로시간 : ${weeklyTotalHours.toFixed(1)}시간`, pageWidth - 60, signatureY + 15, { align: 'right' });
+            doc.text('근로장학생 :               (서명)', pageWidth - 60, signatureY + 35, { align: 'right' });
+            doc.text('근로학생 담당자 :               (서명)', pageWidth - 60, signatureY + 55, { align: 'right' });
         }
     </script>
 </body>
