@@ -440,6 +440,21 @@
         </div>
         
         <div class="section">
+            <h2>점심시간 설정</h2>
+            <div class="form-group">
+                <label><input type="checkbox" id="useLunch" checked> 점심시간 차감 사용</label>
+            </div>
+            <div class="form-group">
+                <label for="lunchStart">시작:</label>
+                <input type="time" id="lunchStart" value="12:00">
+            </div>
+            <div class="form-group">
+                <label for="lunchEnd">종료:</label>
+                <input type="time" id="lunchEnd" value="13:00">
+            </div>
+        </div>
+        
+        <div class="section">
             <h2>월간 근무 스케줄</h2>
             <div class="month-selector">
                 <label for="year">년도:</label>
@@ -924,6 +939,20 @@
         }
         
         // Calculate daily hours from time strings
+        // Calculate overlap between work hours and lunch time (in minutes)
+        function calculateOverlapMinutes(startMin, endMin, lunchStartMin, lunchEndMin) {
+            const overlapStart = Math.max(startMin, lunchStartMin);
+            const overlapEnd = Math.min(endMin, lunchEndMin);
+            
+            // If no overlap, return 0
+            if (overlapStart >= overlapEnd) {
+                return 0;
+            }
+            
+            return overlapEnd - overlapStart;
+        }
+        
+
         function calculateDailyHours(startTime, endTime) {
             if (!startTime || !endTime) return 0;
             
@@ -937,7 +966,25 @@
                 return -1; // Error: end before start
             }
             
-            return (endMinutes - startMinutes) / 60;
+            let totalMinutes = endMinutes - startMinutes;
+            
+            // Deduct lunch time if enabled and overlaps
+            const useLunch = document.getElementById('useLunch').checked;
+            if (useLunch) {
+                const lunchStart = document.getElementById('lunchStart').value;
+                const lunchEnd = document.getElementById('lunchEnd').value;
+                
+                const [lunchStartHour, lunchStartMin] = lunchStart.split(':').map(Number);
+                const [lunchEndHour, lunchEndMin] = lunchEnd.split(':').map(Number);
+                
+                const lunchStartMinutes = lunchStartHour * 60 + lunchStartMin;
+                const lunchEndMinutes = lunchEndHour * 60 + lunchEndMin;
+                
+                const overlapMinutes = calculateOverlapMinutes(startMinutes, endMinutes, lunchStartMinutes, lunchEndMinutes);
+                totalMinutes -= overlapMinutes;
+            }
+            
+            return totalMinutes / 60;
         }
         
         // Load monthly data from localStorage
@@ -983,7 +1030,10 @@
                     department: document.getElementById('department').value,
                     studentId: document.getElementById('studentId').value,
                     studentName: document.getElementById('studentName').value,
-                    defaultWork: document.getElementById('defaultWork').value
+                    defaultWork: document.getElementById('defaultWork').value,
+                    useLunch: document.getElementById('useLunch').checked,
+                    lunchStart: document.getElementById('lunchStart').value,
+                    lunchEnd: document.getElementById('lunchEnd').value
                 };
                 
                 localStorage.setItem('workLogSettings', JSON.stringify(settings));
@@ -1004,6 +1054,9 @@
                     document.getElementById('studentId').value = settings.studentId || '';
                     document.getElementById('studentName').value = settings.studentName || '';
                     document.getElementById('defaultWork').value = settings.defaultWork || '';
+                    document.getElementById('useLunch').checked = settings.useLunch !== false;
+                    document.getElementById('lunchStart').value = settings.lunchStart || '12:00';
+                    document.getElementById('lunchEnd').value = settings.lunchEnd || '13:00';
                 }
             } catch (e) {
                 console.warn('localStorage unavailable:', e);
