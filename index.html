@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>근로장학생 주간업무일지</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+        }
+        
+        .section h2 {
+            font-size: 18px;
+            color: #555;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #007bff;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: inline-block;
+            width: 150px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input[type="text"],
+        input[type="date"],
+        input[type="time"],
+        textarea {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        input[type="text"],
+        input[type="date"] {
+            width: 250px;
+        }
+        
+        input[type="time"] {
+            width: 120px;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 60px;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .week-dates {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .day-card {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            background: #fafafa;
+        }
+        
+        .day-card h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .day-card .date {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .time-group {
+            margin-bottom: 10px;
+        }
+        
+        .time-group label {
+            width: auto;
+            font-size: 13px;
+            margin-right: 5px;
+        }
+        
+        .day-hours {
+            text-align: right;
+            font-weight: bold;
+            color: #007bff;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .total-hours {
+            text-align: right;
+            font-size: 20px;
+            font-weight: bold;
+            color: #28a745;
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 4px;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        
+        button {
+            padding: 12px 30px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+        
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #218838;
+        }
+        
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        
+        .error-message {
+            color: #dc3545;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .week-dates {
+                grid-template-columns: 1fr;
+            }
+            
+            label {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+            
+            input[type="text"],
+            input[type="date"] {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>근로장학생 주간업무일지</h1>
+        
+        <div class="section">
+            <h2>기본 정보</h2>
+            <div class="form-group">
+                <label for="workplace">근로장소:</label>
+                <input type="text" id="workplace" placeholder="예: 학생지원처">
+            </div>
+            <div class="form-group">
+                <label for="department">학과:</label>
+                <input type="text" id="department" placeholder="예: 컴퓨터공학과">
+            </div>
+            <div class="form-group">
+                <label for="studentId">학번:</label>
+                <input type="text" id="studentId" placeholder="예: 20201234">
+            </div>
+            <div class="form-group">
+                <label for="studentName">성명:</label>
+                <input type="text" id="studentName" placeholder="예: 홍길동">
+            </div>
+            <div class="form-group">
+                <label for="defaultWork">기본 근로내용:</label>
+                <textarea id="defaultWork" placeholder="예: 서류 정리 및 데이터 입력 업무"></textarea>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>주간 근무 스케줄</h2>
+            <div class="form-group">
+                <label for="mondayDate">월요일 날짜 선택:</label>
+                <input type="date" id="mondayDate">
+                <small style="margin-left: 10px; color: #666;">월요일을 선택하면 자동으로 주간 날짜가 채워집니다</small>
+            </div>
+            
+            <div class="week-dates" id="weekDates">
+                <!-- Days will be generated here -->
+            </div>
+            
+            <div class="total-hours" id="totalHours">
+                주간 총 근로시간: 0시간
+            </div>
+        </div>
+        
+        <div class="button-group">
+            <button class="btn-primary" onclick="saveSettings()">설정 저장</button>
+            <button class="btn-success" onclick="generatePDF()">PDF 다운로드</button>
+            <button class="btn-danger" onclick="resetForm()">초기화</button>
+        </div>
+    </div>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+            initializeWeekDates();
+            setupEventListeners();
+        });
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            document.getElementById('mondayDate').addEventListener('change', updateWeekDates);
+            
+            // Add time input listeners for automatic calculation
+            document.addEventListener('change', function(e) {
+                if (e.target.type === 'time') {
+                    calculateWeeklyHours();
+                }
+            });
+        }
+        
+        // Initialize week dates with current week
+        function initializeWeekDates() {
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const monday = new Date(today);
+            monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+            
+            document.getElementById('mondayDate').valueAsDate = monday;
+            updateWeekDates();
+        }
+        
+        // Update week dates based on selected Monday
+        function updateWeekDates() {
+            const mondayInput = document.getElementById('mondayDate');
+            if (!mondayInput.value) return;
+            
+            const monday = new Date(mondayInput.value);
+            const weekDatesContainer = document.getElementById('weekDates');
+            weekDatesContainer.innerHTML = '';
+            
+            const days = ['월요일', '화요일', '수요일', '목요일', '금요일'];
+            
+            for (let i = 0; i < 5; i++) {
+                const date = new Date(monday);
+                date.setDate(monday.getDate() + i);
+                
+                const dayCard = createDayCard(days[i], date, i);
+                weekDatesContainer.appendChild(dayCard);
+            }
+            
+            calculateWeeklyHours();
+        }
+        
+        // Create day card HTML
+        function createDayCard(dayName, date, index) {
+            const card = document.createElement('div');
+            card.className = 'day-card';
+            card.innerHTML = `
+                <h3>${dayName}</h3>
+                <div class="date">${date.getMonth() + 1}/${date.getDate()}</div>
+                <div class="time-group">
+                    <label>시작:</label>
+                    <input type="time" id="start${index}" data-day="${index}">
+                </div>
+                <div class="time-group">
+                    <label>종료:</label>
+                    <input type="time" id="end${index}" data-day="${index}">
+                </div>
+                <div class="time-group">
+                    <label>근로내용:</label>
+                    <textarea id="work${index}" rows="3"></textarea>
+                </div>
+                <div class="day-hours" id="hours${index}">0시간</div>
+                <div class="error-message" id="error${index}"></div>
+            `;
+            
+            // Pre-fill work description with default
+            const defaultWork = document.getElementById('defaultWork').value;
+            if (defaultWork) {
+                card.querySelector('textarea').value = defaultWork;
+            }
+            
+            // Add event listeners
+            const startInput = card.querySelector(`#start${index}`);
+            const endInput = card.querySelector(`#end${index}`);
+            
+            startInput.addEventListener('change', () => calculateDayHours(index));
+            endInput.addEventListener('change', () => calculateDayHours(index));
+            
+            return card;
+        }
+        
+        // Calculate hours for a specific day
+        function calculateDayHours(dayIndex) {
+            const startInput = document.getElementById(`start${dayIndex}`);
+            const endInput = document.getElementById(`end${dayIndex}`);
+            const hoursDisplay = document.getElementById(`hours${dayIndex}`);
+            const errorDisplay = document.getElementById(`error${dayIndex}`);
+            
+            const startTime = startInput.value;
+            const endTime = endInput.value;
+            
+            errorDisplay.textContent = '';
+            
+            if (!startTime || !endTime) {
+                hoursDisplay.textContent = '0시간';
+                return 0;
+            }
+            
+            const hours = calculateDailyHours(startTime, endTime);
+            
+            if (hours < 0) {
+                errorDisplay.textContent = '종료 시간이 시작 시간보다 빠릅니다';
+                hoursDisplay.textContent = '0시간';
+                return 0;
+            }
+            
+            hoursDisplay.textContent = `${hours.toFixed(1)}시간`;
+            calculateWeeklyHours();
+            return hours;
+        }
+        
+        // Calculate daily hours from time strings
+        function calculateDailyHours(startTime, endTime) {
+            if (!startTime || !endTime) return 0;
+            
+            const [startHour, startMin] = startTime.split(':').map(Number);
+            const [endHour, endMin] = endTime.split(':').map(Number);
+            
+            const startMinutes = startHour * 60 + startMin;
+            const endMinutes = endHour * 60 + endMin;
+            
+            if (endMinutes < startMinutes) {
+                return -1; // Error: end before start
+            }
+            
+            return (endMinutes - startMinutes) / 60;
+        }
+        
+        // Calculate weekly total hours
+        function calculateWeeklyHours() {
+            let totalHours = 0;
+            
+            for (let i = 0; i < 5; i++) {
+                const startInput = document.getElementById(`start${i}`);
+                const endInput = document.getElementById(`end${i}`);
+                
+                if (startInput && endInput) {
+                    const hours = calculateDailyHours(startInput.value, endInput.value);
+                    if (hours > 0) {
+                        totalHours += hours;
+                    }
+                }
+            }
+            
+            document.getElementById('totalHours').textContent = 
+                `주간 총 근로시간: ${totalHours.toFixed(1)}시간`;
+            
+            return totalHours;
+        }
+        
+        // Get ISO week number (Thursday-based)
+        function getISOWeekNumber(date) {
+            const target = new Date(date.valueOf());
+            const dayNr = (date.getDay() + 6) % 7;
+            target.setDate(target.getDate() - dayNr + 3);
+            const firstThursday = target.valueOf();
+            target.setMonth(0, 1);
+            if (target.getDay() !== 4) {
+                target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7);
+            }
+            return 1 + Math.ceil((firstThursday - target) / 604800000);
+        }
+        
+        // Save settings to localStorage
+        function saveSettings() {
+            try {
+                const settings = {
+                    workplace: document.getElementById('workplace').value,
+                    department: document.getElementById('department').value,
+                    studentId: document.getElementById('studentId').value,
+                    studentName: document.getElementById('studentName').value,
+                    defaultWork: document.getElementById('defaultWork').value
+                };
+                
+                localStorage.setItem('workLogSettings', JSON.stringify(settings));
+                alert('설정이 저장되었습니다.');
+            } catch (e) {
+                console.warn('localStorage unavailable:', e);
+                alert('설정 저장에 실패했습니다.');
+            }
+        }
+        
+        // Load settings from localStorage
+        function loadSettings() {
+            try {
+                const settings = JSON.parse(localStorage.getItem('workLogSettings'));
+                if (settings) {
+                    document.getElementById('workplace').value = settings.workplace || '';
+                    document.getElementById('department').value = settings.department || '';
+                    document.getElementById('studentId').value = settings.studentId || '';
+                    document.getElementById('studentName').value = settings.studentName || '';
+                    document.getElementById('defaultWork').value = settings.defaultWork || '';
+                }
+            } catch (e) {
+                console.warn('localStorage unavailable:', e);
+            }
+        }
+        
+        // Reset form
+        function resetForm() {
+            if (confirm('모든 입력 내용을 초기화하시겠습니까?')) {
+                document.getElementById('workplace').value = '';
+                document.getElementById('department').value = '';
+                document.getElementById('studentId').value = '';
+                document.getElementById('studentName').value = '';
+                document.getElementById('defaultWork').value = '';
+                
+                initializeWeekDates();
+            }
+        }
+        
+        // Generate PDF
+        function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+            
+            // Get data
+            const workplace = document.getElementById('workplace').value || '-';
+            const department = document.getElementById('department').value || '-';
+            const studentId = document.getElementById('studentId').value || '-';
+            const studentName = document.getElementById('studentName').value || '-';
+            
+            const mondayDate = new Date(document.getElementById('mondayDate').value);
+            const year = mondayDate.getFullYear();
+            const month = mondayDate.getMonth() + 1;
+            const weekNumber = getISOWeekNumber(mondayDate);
+            
+            // Set font (fallback to default for Korean support)
+            doc.setFont('helvetica');
+            
+            // Title (y=25mm, 22pt, center)
+            doc.setFontSize(22);
+            doc.text('근로장학생 주간업무일지', 105, 25, { align: 'center' });
+            
+            // Date and week number (y=35mm, 13pt, right-align)
+            doc.setFontSize(13);
+            doc.text(`${year}년 ${String(month).padStart(2, '0')} ( ${weekNumber} ) 주차`, 200, 35, { align: 'right' });
+            
+            // Basic Info Table (y=45mm)
+            doc.setFontSize(11);
+            const tableY = 45;
+            const colWidth = 47.5;
+            const rowHeight = 10;
+            
+            // Draw table borders
+            doc.rect(10, tableY, colWidth, rowHeight); // 근로장소 label
+            doc.rect(10 + colWidth, tableY, colWidth, rowHeight); // 근로장소 value
+            doc.rect(10 + colWidth * 2, tableY, colWidth, rowHeight); // 학과 label
+            doc.rect(10 + colWidth * 2 + colWidth, tableY, colWidth, rowHeight); // 학과 value
+            
+            doc.rect(10, tableY + rowHeight, colWidth, rowHeight); // 학번 label
+            doc.rect(10 + colWidth, tableY + rowHeight, colWidth, rowHeight); // 학번 value
+            doc.rect(10 + colWidth * 2, tableY + rowHeight, colWidth, rowHeight); // 성명 label
+            doc.rect(10 + colWidth * 2 + colWidth, tableY + rowHeight, colWidth, rowHeight); // 성명 value
+            
+            // Fill basic info
+            doc.text('근로장소', 15, tableY + 6);
+            doc.text(workplace, 15 + colWidth, tableY + 6);
+            doc.text('학  과', 15 + colWidth * 2, tableY + 6);
+            doc.text(department, 15 + colWidth * 2 + colWidth, tableY + 6);
+            
+            doc.text('학  번', 15, tableY + rowHeight + 6);
+            doc.text(studentId, 15 + colWidth, tableY + rowHeight + 6);
+            doc.text('성  명', 15 + colWidth * 2, tableY + rowHeight + 6);
+            doc.text(studentName, 15 + colWidth * 2 + colWidth, tableY + rowHeight + 6);
+            
+            // Class Schedule Section (y=65mm) - Blank table
+            const classY = 70;
+            doc.setFontSize(12);
+            doc.text('근로장학생 수업시간', 10, classY);
+            
+            doc.setFontSize(10);
+            const classTableY = classY + 5;
+            const classColWidth = 38;
+            const classRowHeight = 8;
+            
+            // Draw class schedule table (5 cols × 4 rows, blank)
+            for (let row = 0; row < 4; row++) {
+                for (let col = 0; col < 5; col++) {
+                    doc.rect(10 + col * classColWidth, classTableY + row * classRowHeight, classColWidth, classRowHeight);
+                }
+            }
+            
+            // Work Time/Content Section (y=115mm)
+            const workY = 115;
+            doc.setFontSize(11);
+            
+            // Table headers
+            const workColWidths = [30, 40, 80, 30];
+            const workRowHeight = 12;
+            let currentX = 10;
+            
+            // Draw header row
+            doc.rect(currentX, workY, workColWidths[0], workRowHeight);
+            doc.text('근무일', currentX + 12, workY + 8);
+            currentX += workColWidths[0];
+            
+            doc.rect(currentX, workY, workColWidths[1], workRowHeight);
+            doc.text('근로시간', currentX + 14, workY + 8);
+            currentX += workColWidths[1];
+            
+            doc.rect(currentX, workY, workColWidths[2], workRowHeight);
+            doc.text('근로내용', currentX + 35, workY + 8);
+            currentX += workColWidths[2];
+            
+            doc.rect(currentX, workY, workColWidths[3], workRowHeight);
+            doc.text('일근로시간', currentX + 8, workY + 8);
+            
+            // Fill work data (2 rows per day × 5 days)
+            const days = ['월', '화', '수', '목', '금'];
+            let currentY = workY + workRowHeight;
+            
+            doc.setFontSize(10);
+            
+            for (let i = 0; i < 5; i++) {
+                const date = new Date(mondayDate);
+                date.setDate(mondayDate.getDate() + i);
+                const dateStr = `${month}/${date.getDate()}`;
+                
+                const startTime = document.getElementById(`start${i}`)?.value || '';
+                const endTime = document.getElementById(`end${i}`)?.value || '';
+                const workContent = document.getElementById(`work${i}`)?.value || '';
+                const dailyHours = calculateDailyHours(startTime, endTime);
+                
+                const timeStr = (startTime && endTime && dailyHours >= 0) 
+                    ? `${startTime}~${endTime}` 
+                    : '-';
+                const hoursStr = (dailyHours > 0) ? `${dailyHours.toFixed(1)}` : '-';
+                
+                // First row for this day
+                currentX = 10;
+                
+                // Day name + date (merged 2 rows)
+                doc.rect(currentX, currentY, workColWidths[0], workRowHeight * 2);
+                doc.text(`${days[i]}(${dateStr})`, currentX + 3, currentY + 12);
+                currentX += workColWidths[0];
+                
+                // Work time
+                doc.rect(currentX, currentY, workColWidths[1], workRowHeight);
+                doc.text(timeStr, currentX + 3, currentY + 8);
+                currentX += workColWidths[1];
+                
+                // Work content (merged 2 rows)
+                doc.rect(currentX, currentY, workColWidths[2], workRowHeight * 2);
+                
+                // Split long text
+                if (workContent) {
+                    const lines = doc.splitTextToSize(workContent, workColWidths[2] - 6);
+                    doc.text(lines.slice(0, 3), currentX + 3, currentY + 6);
+                }
+                currentX += workColWidths[2];
+                
+                // Daily hours (merged 2 rows)
+                doc.rect(currentX, currentY, workColWidths[3], workRowHeight * 2);
+                doc.text(hoursStr, currentX + 10, currentY + 12);
+                
+                // Second row for this day
+                currentY += workRowHeight;
+                currentX = 10 + workColWidths[0];
+                
+                // Empty time cell
+                doc.rect(currentX, currentY, workColWidths[1], workRowHeight);
+                
+                currentY += workRowHeight;
+            }
+            
+            // Supervisor Corrections Table (y=235mm)
+            const correctionY = 235;
+            doc.setFontSize(11);
+            doc.text('근로학생 담당자 수정사항', 10, correctionY);
+            
+            const correctionTableY = correctionY + 5;
+            doc.rect(10, correctionTableY, 190, 20);
+            
+            // Signature Section (y=265mm)
+            const signatureY = 265;
+            const totalHours = calculateWeeklyHours();
+            
+            doc.setFontSize(11);
+            doc.text(`주간 근로시간 : ${totalHours.toFixed(1)}시간`, 150, signatureY, { align: 'right' });
+            doc.text('근로장학생 :               (서명)', 150, signatureY + 8, { align: 'right' });
+            doc.text('근로학생 담당자 :               (서명)', 150, signatureY + 16, { align: 'right' });
+            
+            // Save PDF
+            const filename = `work-log-${year}-${String(month).padStart(2, '0')}-${String(mondayDate.getDate()).padStart(2, '0')}.pdf`;
+            doc.save(filename);
+        }
+    </script>
+</body>
+</html>
