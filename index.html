@@ -1205,11 +1205,11 @@
                     cols: [59.5, 125.5, 230.8, 460.0, 535.2],
                     // 요일별 Y좌표 (2줄씩)
                     dayRows: [
-                        { top: 336.0, dateY: 352.5, dayY: 370.2, timeY1: 341.8, timeY2: 359.4 },
-                        { top: 389.0, dateY: 405.6, dayY: 423.1, timeY1: 394.8, timeY2: 412.4 },
-                        { top: 442.0, dateY: 458.5, dayY: 476.1, timeY1: 447.7, timeY2: 465.3 },
-                        { top: 495.0, dateY: 511.4, dayY: 529.1, timeY1: 500.6, timeY2: 518.4 },
-                        { top: 548.0, dateY: 564.3, dayY: 582.0, timeY1: 553.7, timeY2: 571.3 }
+                        { top: 336.0, dateY: 352.5, dayY: 370.2, timeY1: 341.8, timeY2: 359.4, timeY3: 377.1 },
+                        { top: 389.0, dateY: 405.6, dayY: 423.1, timeY1: 394.8, timeY2: 412.4, timeY3: 430.1 },
+                        { top: 442.0, dateY: 458.5, dayY: 476.1, timeY1: 447.7, timeY2: 465.3, timeY3: 483.0 },
+                        { top: 495.0, dateY: 511.4, dayY: 529.1, timeY1: 500.6, timeY2: 518.4, timeY3: 536.0 },
+                        { top: 548.0, dateY: 564.3, dayY: 582.0, timeY1: 553.7, timeY2: 571.3, timeY3: 588.9 }
                     ],
                     dayRowHeight: 53.0,
                     subRowHeight: 26.5,
@@ -1238,7 +1238,7 @@
             
             // ===== 주차 정보 (우측 정렬, 원본 spacing 유지) =====
             doc.setFontSize(COORDS.weekInfo.fontSize);
-            const weekStr = `${year} 년   ${String(month).padStart(2, '0')} ( ${weekNumber} ) 주차`;
+            const weekStr = `${year} 년   ${month} ( ${weekNumber} ) 주차`;
             doc.text(weekStr, pageWidth - 60, COORDS.weekInfo.y, { align: 'right' });
             
             // ===== 기본 정보 테이블 =====
@@ -1377,6 +1377,7 @@
                         doc.text(`${data.startTime} ~ ${data.endTime}`, 142.3, dayRow.timeY1);
                     }
                     doc.text('~', 174.4, dayRow.timeY2);
+                    doc.text('~', 174.4, dayRow.timeY3);
                     
                     // 근로내용
                     if (data.workContent) {
@@ -1392,6 +1393,7 @@
                     // 빈 데이터
                     doc.text('~', 174.4, dayRow.timeY1);
                     doc.text('~', 174.4, dayRow.timeY2);
+                    doc.text('~', 174.4, dayRow.timeY3);
                 }
             }
             
@@ -1405,6 +1407,12 @@
             doc.setFontSize(10);
             doc.text('담당자', 76.0, cr.headerY);
             doc.text('수정내역', 70.6, cr.subHeaderY);
+
+            // ===== ICIMS 노트 =====
+            doc.setFontSize(8);
+            doc.text('*ICIMS 출근부', 66.2, 653.8);
+            doc.text('수정사항 반영', 66.5, 666.6);
+            doc.setFontSize(10);
             
             // 5줄 "월    일" 입력란
             for (let i = 0; i < 5; i++) {
