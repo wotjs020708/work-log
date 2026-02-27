@@ -1188,14 +1188,22 @@
                 
                 // 수업시간 섹션
                 classSchedule: {
-                    headerY: 161.9,
-                    subHeaderY: 183.3,
-                    tableTop: 195.4,
-                    cols: [59.5, 154.3, 249.1, 343.9, 438.7, 535.2],
-                    rows: [195.4, 214.1, 232.8, 251.5, 270.2, 288.9],
-                    dayHeaderY: 203.4,
-                    dayX: [90.1, 185.8, 281.3, 376.1, 471.1]
-                },
+                    // 테이블 전체 (헤더 2행 포함)
+                    tableTop: 159.2,
+                    tableBottom: 295.4,
+                    // 수평선 y좌표 (8개)
+                    rows: [159.2, 180.7, 202.2, 220.9, 239.5, 258.1, 276.8, 295.4],
+                    // 열 구분선 x좌표 (6개)
+                    cols: [59.0, 153.8, 250.6, 345.0, 440.0, 535.8],
+                    // 텍스트 y좌표
+                    headerY: 171.9,      // "근로장학생 수업시간"
+                    subHeaderY: 191.5,   // "근로장학 주간 요일별 교과목 수업시간"
+                    dayHeaderY: 211.5,   // 요일 헤더
+                    dayX: [90.1, 185.8, 281.3, 376.1, 471.1],
+                    // 교시 행/열 좌표
+                    classRowYs: [230.4, 248.8, 267.4, 286.1],
+                    classColXs: [64.6, 159.0, 255.7, 350.0, 445.2]
+                }
                 
                 // 근로시간/내용 섹션
                 workSection: {
@@ -1266,42 +1274,35 @@
             
             // ===== 수업시간 섹션 =====
             const cs = COORDS.classSchedule;
-            
-            // 헤더 텍스트
-            doc.setFontSize(12);
-            doc.text('근로장학생 수업시간', pageWidth / 2, cs.headerY, { align: 'center' });
-            doc.setFontSize(10);
-            doc.text('근로장학 주간 요일별 교과목 수업시간', pageWidth / 2, cs.subHeaderY, { align: 'center' });
-            
-            // 5열 × 5행 테이블 (헤더행 + 4교시행)
-            for (let i = 0; i < 6; i++) {
+            doc.setFontSize(11);  // 모든 텍스트 11pt
+
+            // 테이블 외곽선
+            doc.rect(COORDS.leftMargin, cs.tableTop, COORDS.tableWidth, cs.tableBottom - cs.tableTop);
+
+            // 수평선 (내부 구분선 - 7개)
+            for (let i = 1; i < cs.rows.length - 1; i++) {
                 doc.line(COORDS.leftMargin, cs.rows[i], COORDS.rightMargin, cs.rows[i]);
             }
-            for (let i = 0; i < 6; i++) {
-                doc.line(cs.cols[i], cs.rows[0], cs.cols[i], cs.rows[5]);
+
+            // 수직선 (요일 헤더행부터 하단까지만 - 5개 열 구분)
+            for (let i = 1; i < cs.cols.length - 1; i++) {
+                doc.line(cs.cols[i], cs.rows[2], cs.cols[i], cs.tableBottom);
             }
-            
+
+            // 헤더 텍스트 (테이블 안, 중앙 정렬)
+            doc.text('근로장학생 수업시간', pageWidth / 2, cs.headerY, { align: 'center' });
+            doc.text('근로장학 주간 요일별 교과목 수업시간', pageWidth / 2, cs.subHeaderY, { align: 'center' });
+
             // 요일 헤더
-            doc.setFontSize(10);
             const dayHeaders = ['월요일', '화요일', '수요일', '목요일', '금요일'];
             for (let i = 0; i < 5; i++) {
                 doc.text(dayHeaders[i], cs.dayX[i], cs.dayHeaderY);
             }
-            
-            // 교시 입력란 (빈 상태로 ~    교시 형식)
-            const classRowYs = [222.0, 240.7, 259.3, 278.0];
-            const classColXs = [64.6, 159.0, 255.7, 350.0, 445.2];
-            const weekdays = ['월', '화', '수', '목', '금'];
-            
-            // 첫 번째 행: 요일 + ~    교시
-            for (let col = 0; col < 5; col++) {
-                doc.text(`${weekdays[col]}  ~    교시`, classColXs[col], classRowYs[0]);
-            }
-            
-            // 2~4 행: ~    교시만
-            for (let row = 1; row < 4; row++) {
+
+            // 교시 입력란 (모든 행 동일하게 "~    교시")
+            for (let row = 0; row < 4; row++) {
                 for (let col = 0; col < 5; col++) {
-                    doc.text('~    교시', classColXs[col], classRowYs[row]);
+                    doc.text('~    교시', cs.classColXs[col], cs.classRowYs[row]);
                 }
             }
             
