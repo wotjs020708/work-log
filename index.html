@@ -1087,10 +1087,10 @@
             const month = parseInt(document.getElementById('month').value);
             
             // Get settings
-            const workplace = document.getElementById('workplace').value || '-';
-            const department = document.getElementById('department').value || '-';
-            const studentId = document.getElementById('studentId').value || '-';
-            const studentName = document.getElementById('studentName').value || '-';
+            const workplace = document.getElementById('workplace').value || '';
+            const department = document.getElementById('department').value || '';
+            const studentId = document.getElementById('studentId').value || '';
+            const studentName = document.getElementById('studentName').value || '';
             
             // Split month into weeks
             const weeks = splitMonthIntoWeeks(year, month);
