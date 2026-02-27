@@ -1393,9 +1393,21 @@
                         doc.text(contentLines.slice(0, 2), 235.9, dayRow.timeY1);
                     }
                     
+                    // 일근로시간: startTime과 endTime으로부터 자동 계산
+                    let calculatedHours = 0;
+                    if (data.startTime && data.endTime) {
+                        const [startH, startM] = data.startTime.split(':').map(Number);
+                        const [endH, endM] = data.endTime.split(':').map(Number);
+                        const startMinutes = startH * 60 + startM;
+                        const endMinutes = endH * 60 + endM;
+                        calculatedHours = (endMinutes - startMinutes) / 60;
+                    }
+                    
                     // 일근로시간: "N시간" 형식
                     if (data.hours > 0) {
                         doc.text(`${Math.floor(data.hours)}시간`, 465.0, dayRow.timeY1);
+                    } else if (calculatedHours > 0) {
+                        doc.text(`${Math.floor(calculatedHours)}시간`, 465.0, dayRow.timeY1);
                     }
                 } else {
                     // 빈 데이터
