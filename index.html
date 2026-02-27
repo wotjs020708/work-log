@@ -1256,6 +1256,7 @@
             // 통합 테이블 외곽선 (basicInfo + classSchedule + workSection)
             doc.rect(COORDS.leftMargin, bi.row1Y, COORDS.tableWidth, 495.6);
             doc.line(COORDS.leftMargin, bi.row2Y, COORDS.rightMargin, bi.row2Y);
+            doc.line(COORDS.leftMargin, bi.row3Y, COORDS.rightMargin, bi.row3Y);
             doc.line(bi.cols[1], bi.row1Y, bi.cols[1], bi.row3Y);
             doc.line(bi.cols[2], bi.row1Y, bi.cols[2], bi.row3Y);
             doc.line(bi.cols[3], bi.row1Y, bi.cols[3], bi.row3Y);
@@ -1313,6 +1314,8 @@
             
             
             // 헤더 행 구분선
+            doc.line(COORDS.leftMargin, cs.tableBottom, COORDS.rightMargin, cs.tableBottom);
+            doc.line(COORDS.leftMargin, ws.tableTop, COORDS.rightMargin, ws.tableTop);
             doc.line(COORDS.leftMargin, ws.headerRowBottom, COORDS.rightMargin, ws.headerRowBottom);
             
             // 열 구분선
@@ -1380,6 +1383,8 @@
                     // 시간 형식: "HH:MM ~ HH:MM"
                     if (data.startTime && data.endTime) {
                         doc.text(`${data.startTime} ~ ${data.endTime}`, 178.15, dayRow.timeY1, { align: 'center' });
+                    } else {
+                        doc.text('~', 178.15, dayRow.timeY1, { align: 'center' });
                     }
                     doc.text('~', 178.15, dayRow.timeY2, { align: 'center' });
                     doc.text('~', 178.15, dayRow.timeY3, { align: 'center' });
