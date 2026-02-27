@@ -1253,8 +1253,8 @@
             doc.setFontSize(8);
             const bi = COORDS.basicInfo;
             
-            // 테이블 외곽선 및 구분선
-            doc.rect(COORDS.leftMargin, bi.row1Y, COORDS.tableWidth, bi.row3Y - bi.row1Y);
+            // 통합 테이블 외곽선 (basicInfo + classSchedule + workSection)
+            doc.rect(COORDS.leftMargin, bi.row1Y, COORDS.tableWidth, 495.6);
             doc.line(COORDS.leftMargin, bi.row2Y, COORDS.rightMargin, bi.row2Y);
             doc.line(bi.cols[1], bi.row1Y, bi.cols[1], bi.row3Y);
             doc.line(bi.cols[2], bi.row1Y, bi.cols[2], bi.row3Y);
@@ -1276,8 +1276,6 @@
             const cs = COORDS.classSchedule;
             doc.setFontSize(8);  // 모든 텍스트 8pt
 
-            // 테이블 외곽선
-            doc.rect(COORDS.leftMargin, cs.tableTop, COORDS.tableWidth, cs.tableBottom - cs.tableTop);
 
             // 수평선 (내부 구분선 - 7개)
             for (let i = 1; i < cs.rows.length - 1; i++) {
@@ -1313,8 +1311,6 @@
             doc.setFontSize(8);
             doc.text('근로 장학 시간 및 근로 장학 내용', pageWidth / 2, ws.headerY, { align: 'center' });
             
-            // 테이블 외곽선
-            doc.rect(COORDS.leftMargin, ws.tableTop, COORDS.tableWidth, ws.tableBottom - ws.tableTop);
             
             // 헤더 행 구분선
             doc.line(COORDS.leftMargin, ws.headerRowBottom, COORDS.rightMargin, ws.headerRowBottom);
