@@ -1291,7 +1291,15 @@
             // 교시 입력란 (빈 상태로 ~    교시 형식)
             const classRowYs = [222.0, 240.7, 259.3, 278.0];
             const classColXs = [64.6, 159.0, 255.7, 350.0, 445.2];
-            for (let row = 0; row < 4; row++) {
+            const weekdays = ['월', '화', '수', '목', '금'];
+            
+            // 첫 번째 행: 요일 + ~    교시
+            for (let col = 0; col < 5; col++) {
+                doc.text(`${weekdays[col]}  ~    교시`, classColXs[col], classRowYs[0]);
+            }
+            
+            // 2~4 행: ~    교시만
+            for (let row = 1; row < 4; row++) {
                 for (let col = 0; col < 5; col++) {
                     doc.text('~    교시', classColXs[col], classRowYs[row]);
                 }
