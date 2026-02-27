@@ -1173,8 +1173,8 @@
                 tableWidth: 475.7,
                 
                 // 제목/주차
-                title: { y: 51.5, fontSize: 22 },
-                weekInfo: { x: 389.6, y: 88.7, fontSize: 13 },
+                title: { y: 51.5, fontSize: 15 },
+                weekInfo: { x: 389.6, y: 88.7, fontSize: 9 },
                 
                 // 기본정보 테이블
                 basicInfo: {
@@ -1250,7 +1250,7 @@
             doc.text(weekStr, pageWidth - 60, COORDS.weekInfo.y, { align: 'right' });
             
             // ===== 기본 정보 테이블 =====
-            doc.setFontSize(11);
+            doc.setFontSize(8);
             const bi = COORDS.basicInfo;
             
             // 테이블 외곽선 및 구분선
@@ -1274,7 +1274,7 @@
             
             // ===== 수업시간 섹션 =====
             const cs = COORDS.classSchedule;
-            doc.setFontSize(11);  // 모든 텍스트 11pt
+            doc.setFontSize(8);  // 모든 텍스트 8pt
 
             // 테이블 외곽선
             doc.rect(COORDS.leftMargin, cs.tableTop, COORDS.tableWidth, cs.tableBottom - cs.tableTop);
@@ -1310,7 +1310,7 @@
             const ws = COORDS.workSection;
             
             // 섹션 헤더
-            doc.setFontSize(11);
+            doc.setFontSize(8);
             doc.text('근로 장학 시간 및 근로 장학 내용', pageWidth / 2, ws.headerY, { align: 'center' });
             
             // 테이블 외곽선
@@ -1325,10 +1325,10 @@
             }
             
             // 헤더 텍스트
-            doc.text('근무일', 76.0, 323.3);
-            doc.text('근로시간', 156.1, 323.3);
-            doc.text('근로내용', 323.3, 323.3);
-            doc.text('일근로시간', 470.0, 323.3);
+            doc.text('근무일', 92.5, 323.3, { align: 'center' });
+            doc.text('근로시간', 178.15, 323.3, { align: 'center' });
+            doc.text('근로내용', 345.4, 323.3, { align: 'center' });
+            doc.text('일근로시간', 497.6, 323.3, { align: 'center' });
             
             // 요일별 가로 구분선 및 근로시간 열 내부 구분선
             for (let i = 0; i < 5; i++) {
@@ -1352,7 +1352,7 @@
             
             // 각 요일 데이터 렌더링
             const dayNames = ['', '월', '화', '수', '목', '금'];
-            doc.setFontSize(10);
+            doc.setFontSize(7);
             
             for (let dayOfWeek = 1; dayOfWeek <= 5; dayOfWeek++) {
                 const dayRow = ws.dayRows[dayOfWeek - 1];
@@ -1375,23 +1375,23 @@
                 const dayNum = targetDate.getDate();
                 
                 // 날짜 2줄 표시: "10월 11일" + "(수)"
-                doc.text(`${monthNum}월 ${dayNum}일`, 66.7, dayRow.dateY);
-                doc.text(`(${dayNames[dayOfWeek]})`, 83.6, dayRow.dayY);
+                doc.text(`${monthNum}월 ${dayNum}일`, 92.5, dayRow.dateY, { align: 'center' });
+                doc.text(`(${dayNames[dayOfWeek]})`, 92.5, dayRow.dayY, { align: 'center' });
                 
                 if (workDay && workDay.data) {
                     const data = workDay.data;
                     
                     // 시간 형식: "HH:MM ~ HH:MM"
                     if (data.startTime && data.endTime) {
-                        doc.text(`${data.startTime} ~ ${data.endTime}`, 142.3, dayRow.timeY1);
+                        doc.text(`${data.startTime} ~ ${data.endTime}`, 178.15, dayRow.timeY1, { align: 'center' });
                     }
-                    doc.text('~', 174.4, dayRow.timeY2);
-                    doc.text('~', 174.4, dayRow.timeY3);
+                    doc.text('~', 178.15, dayRow.timeY2, { align: 'center' });
+                    doc.text('~', 178.15, dayRow.timeY3, { align: 'center' });
                     
                     // 근로내용
                     if (data.workContent) {
                         const contentLines = doc.splitTextToSize(data.workContent, ws.cols[3] - ws.cols[2] - 16);
-                        doc.text(contentLines.slice(0, 2), 235.9, dayRow.timeY1);
+                        doc.text(contentLines.slice(0, 2), 345.4, dayRow.timeY1, { align: 'center' });
                     }
                     
                     // 일근로시간: startTime과 endTime으로부터 자동 계산
@@ -1406,15 +1406,15 @@
                     
                     // 일근로시간: "N시간" 형식
                     if (data.hours > 0) {
-                        doc.text(`${Math.floor(data.hours)}시간`, 465.0, dayRow.timeY1);
+                        doc.text(`${Math.floor(data.hours)}시간`, 497.6, dayRow.timeY1, { align: 'center' });
                     } else if (calculatedHours > 0) {
-                        doc.text(`${Math.floor(calculatedHours)}시간`, 465.0, dayRow.timeY1);
+                        doc.text(`${Math.floor(calculatedHours)}시간`, 497.6, dayRow.timeY1, { align: 'center' });
                     }
                 } else {
                     // 빈 데이터
-                    doc.text('~', 174.4, dayRow.timeY1);
-                    doc.text('~', 174.4, dayRow.timeY2);
-                    doc.text('~', 174.4, dayRow.timeY3);
+                    doc.text('~', 178.15, dayRow.timeY1, { align: 'center' });
+                    doc.text('~', 178.15, dayRow.timeY2, { align: 'center' });
+                    doc.text('~', 178.15, dayRow.timeY3, { align: 'center' });
                 }
             }
             
@@ -1425,15 +1425,15 @@
             doc.line(COORDS.leftMargin, cr.rowYs[0], COORDS.rightMargin, cr.rowYs[0]);
             
             // 헤더
-            doc.setFontSize(11);
+            doc.setFontSize(8);
             doc.text('담당자', 76.0, cr.headerY);
             doc.text('수정내역', 70.6, cr.subHeaderY);
 
             // ===== ICIMS 노트 =====
-            doc.setFontSize(8);
+            doc.setFontSize(6);
             doc.text('*ICIMS 출근부', 66.2, 653.8);
             doc.text('수정사항 반영', 66.5, 666.6);
-            doc.setFontSize(10);
+            doc.setFontSize(7);
             
             // 5줄 "월    일" 입력란
             for (let i = 0; i < 5; i++) {
@@ -1456,7 +1456,7 @@
                 weeklyTotalHours += day.data?.hours || 0;
             });
             
-            doc.setFontSize(11);
+            doc.setFontSize(8);
             doc.text(`주간 근로시간 :       ${Math.floor(weeklyTotalHours)}시간`, pageWidth - 60, sig.totalY, { align: 'right' });
             doc.text('근로장학생 :               (서명)', pageWidth - 60, sig.studentY, { align: 'right' });
             doc.text('근로학생 담당자 :               (서명)', pageWidth - 60, sig.supervisorY, { align: 'right' });
